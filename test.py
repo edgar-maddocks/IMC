@@ -33,10 +33,14 @@ class Trader:
           trader_data_DICT[state.timestamp] = available_orders
         elif state.timestamp != 0:
           trader_data_DICT = jsonpickle.loads(state.traderData)
-          print(trader_data_DICT)
           trader_data_DICT[state.timestamp] = available_orders
-          serialized_trader_data_DICT = jsonpickle.dumps(trader_data_DICT)
-          traderData = serialized_trader_data_DICT
+          if state.timestamp > (250 * 100):
+              lowest_key = min([int(key) for key in trader_data_DICT.keys()])
+              del trader_data_DICT[str(lowest_key)]
+              
+        
+        serialized_trader_data_DICT = jsonpickle.dumps(trader_data_DICT)
+        traderData = serialized_trader_data_DICT
         
 				# Sample conversion request. Check more details below. 
         conversions = 1
