@@ -9,3 +9,6 @@ if state.timestamp==0:
 serialized_TraderData = json.dumps( My_trader_data_DICT )
         print(serialized_TraderData)
         traderData = serialized_TraderData
+
+calc bid ask spread as pct. take av over time
+if spread ever goes gt or lt av. buy or sell
