@@ -1,0 +1,11 @@
+if state.timestamp==0:
+            My_trader_data_DICT={}
+            My_trader_data_DICT['example']=[1,2,3]
+
+        elif state.timestamp!=0: 
+            My_trader_data_DICT=json.loads(state.traderData)
+            print(state.traderData)
+            print(My_trader_data_DICT)
+serialized_TraderData = json.dumps( My_trader_data_DICT )
+        print(serialized_TraderData)
+        traderData = serialized_TraderData
