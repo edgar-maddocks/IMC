@@ -48,14 +48,20 @@ class Trader:
             bids = np.array([])
             asks = np.array([])
             for dict in list(trader_data_DICT.values()):
-                bids = np.append(
-                    bids, np.mean([float(x) for x in list(dict[product]["BID"].keys())])
-                )
-                asks = np.append(
-                    asks, np.mean([float(x) for x in list(dict[product]["ASK"].keys())])
-                )
+                if len(dict[product].keys()) > 0:
+                    bids = np.append(
+                        bids,
+                        np.mean([float(x) for x in list(dict[product]["BID"].keys())]),
+                    )
+                if len(dict[product].keys()) > 0:
+                    asks = np.append(
+                        asks,
+                        np.mean([float(x) for x in list(dict[product]["ASK"].keys())]),
+                    )
             spread = asks - bids
             spreads[product] = spread
+
+        print(spreads)
 
         # Sample conversion request. Check more details below.
         conversions = 1
