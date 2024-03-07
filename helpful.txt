@@ -10,20 +10,13 @@ serialized_TraderData = json.dumps( My_trader_data_DICT )
         print(serialized_TraderData)
         traderData = serialized_TraderData
 
-calc bid ask spread as pct. take av over time
-if spread ever goes gt or lt av. buy or sell
 
-spreads = {}
-        for product in products:
-            bid_prices = []
-            ask_prices = []
-            for dict_prods in list(trader_data_DICT.values()):
-                print(dict_prods)
-                # bid_prices = dict_prods[product]["BID"].keys()
-            for dict_prods in list(trader_data_DICT.values()):
-                print(dict_prods)
-                # ask_prices = dict_prods[product]["ASK"].keys()
-            # mean_bid = sum(bid_prices) / len(bid_prices)
-            # mean_ask = sum(ask_prices) / len(ask_prices)
-
-            # spreads[product] = mean_bid - mean_ask
+if state.timestamp == 0:
+          trader_data_DICT = {}
+          trader_data_DICT[state.timestamp] = {state.timestamp : available_orders}
+        elif state.timestamp != 0:
+          trader_data_DICT = jsonpickle.loads(state.traderData)
+          trader_data_DICT[state.timestamp] = {state.timestamp : available_orders}
+        
+        serialized_trader_data = jsonpickle.dumps(trader_data_DICT)
+        traderData = serialized_trader_data

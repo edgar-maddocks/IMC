@@ -155,9 +155,11 @@ class Trader:
         for product in products:
             bb, ba = self.get_bb_ba(state, product)
             mid_price = self.calculate_mid_price(ba, bb)
-            acc_bid, acc_ask = self.generate_bid_ask_prices(mid_price, (spreads[product][-1]/mid_price), position_weights[product])
-            print((spreads[product][-1]/mid_price))
+            acc_bid, acc_ask = self.generate_bid_ask_prices(mid_price, 0.025, position_weights[product])
             result[product] = self.compute_orders(product, state.order_depths[product], acc_bid, acc_ask)
+
+            print("ACC BID:", acc_bid)
+            print("BEST BID:", ba)
 
         # Sample conversion request. Check more details below.
         conversions = 1
