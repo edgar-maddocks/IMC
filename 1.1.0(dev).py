@@ -13,16 +13,8 @@ class Trader:
 
     position = {"STARFRUIT": 0, "AMETHYSTS": 0}
     POSITION_LIMITS = {"STARFRUIT": 20, "AMETHYSTS": 20}
-    first_signal = False
-    short_sma_above = False
-
-    def generate_bid_ask_prices(
-        self, mid_price: float, spread: float, position_weight: float
-    ):
-        ask_price = mid_price + (spread * position_weight)
-        bid_price = mid_price - (spread * position_weight)
-
-        return bid_price, ask_price
+    first_signal = {"STARFRUIT": False, "AMETHYSTS": False}
+    short_sma_above = {"STARTFRUIT": False, "AMETHYSTS": False}
 
     def calculate_mid_price(self, best_ask, best_bid):
         return (best_ask + best_bid) / 2
@@ -118,18 +110,6 @@ class Trader:
 
         return orders
 
-    def calculate_position_weights(self):
-        total_pos = sum([abs(x) for x in list(self.position.values())])
-        position_weights = {"STARFRUIT": 0, "AMETHYSTS": 0}
-        if total_pos == 0:
-            for key in position_weights.keys():
-                position_weights[key] = 1
-        else:
-            for key in position_weights.keys():
-                position_weights[key] = (total_pos / self.position[key]) - 1
-
-        return position_weights
-
     def get_past_prices(self, trader_data_DICT, product):
         prices = {}
         bids = np.array([])
@@ -221,26 +201,37 @@ class Trader:
             for product in products:
                 product_prices = self.get_past_prices(trader_data_DICT, product)
                 mid_prices = (product_prices["BID"] + product_prices["ASK"]) / 2
-                short_sma = np.mean(mid_prices[-int(len(mid_prices) / 4) :])
+                short_sma = np.mean(mid_prices[-int(len(mid_prices) / 3) :])
                 long_sma = np.mean(mid_prices)
-                if self.first_signal is False:
-                    self.short_sma_above = True if short_sma > long_sma else False
-                    self.first_signal = True
-                elif short_sma > long_sma and self.short_sma_above is False:
+
+                total_sell_vol, _ = self.values_extract(
+                    state.order_depths[product].sell_orders
+                )
+                total_buy_vol, _ = self.values_extract(
+                    state.order_depths[product].sell_orders
+                )
+                if self.first_signal[product] is False:
+                    self.short_sma_above[product] = (
+                        True if short_sma > long_sma else False
+                    )
+                    self.first_signal[product] = True
+                elif short_sma > long_sma and self.short_sma_above[product] is False:
                     result[product] = self.fill_orders(
                         product,
                         state.order_depths[product],
-                        self.POSITION_LIMITS[product],
+                        int(total_sell_vol / 2),
                         buy=1,
                     )
-                    self.short_sma_above = True
-                elif short_sma < long_sma and self.short_sma_above is True:
+                    print("BUYING", product)
+                    self.short_sma_above[product] = True
+                elif short_sma < long_sma and self.short_sma_above[product] is True:
                     result[product] = self.fill_orders(
                         product,
                         state.order_depths[product],
-                        self.POSITION_LIMITS[product],
+                        int(total_buy_vol / 2),
                     )
-                    self.short_sma_above = False
+                    print("SELLING", product)
+                    self.short_sma_above[product] = False
 
         # Sample conversion request. Check more details below.
         conversions = 1
