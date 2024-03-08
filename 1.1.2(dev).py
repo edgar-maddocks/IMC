@@ -149,6 +149,8 @@ class Trader:
                 else:
                     if cpos > 0:
                         order_vol += cpos
+                    if abs(cpos + (-order_vol)) > self.POSITION_LIMITS[product]:
+                        order_vol = self.POSITION_LIMITS[product] - abs(cpos)
                     orders.append(Order(product, bid, -order_vol))
 
         if buy == 1:
@@ -160,6 +162,8 @@ class Trader:
                 else:
                     if cpos < 0:
                         order_vol -= cpos
+                    if abs(cpos + order_vol) > self.POSITION_LIMITS[product]:
+                        order_vol = self.POSITION_LIMITS[product] - abs(cpos)
                     orders.append(Order(product, ask, -order_vol))
 
         return orders
@@ -201,7 +205,7 @@ class Trader:
             for product in products:
                 product_prices = self.get_past_prices(trader_data_DICT, product)
                 mid_prices = (product_prices["BID"] + product_prices["ASK"]) / 2
-                short_sma = np.mean(mid_prices[-int(len(mid_prices) / 3) :])
+                short_sma = np.mean(mid_prices[-int(len(mid_prices) * 0.65) :])
                 long_sma = np.mean(mid_prices)
 
                 total_sell_vol, _ = self.values_extract(
@@ -219,7 +223,7 @@ class Trader:
                     result[product] = self.fill_orders(
                         product,
                         state.order_depths[product],
-                        int(total_sell_vol / 2),
+                        20,
                         buy=1,
                     )
                     print("BUYING", product)
@@ -228,7 +232,7 @@ class Trader:
                     result[product] = self.fill_orders(
                         product,
                         state.order_depths[product],
-                        int(total_buy_vol / 2),
+                        20,
                     )
                     print("SELLING", product)
                     self.short_sma_above[product] = False
