@@ -11,22 +11,26 @@ import collections
 
 class Trader:
 
-    position = {"STARFRUIT" : 0, "AMETHYSTS": 0}
-    POSITION_LIMITS = {"STARFRUIT" : 20, "AMETHYSTS" : 20}
+    position = {"STARFRUIT": 0, "AMETHYSTS": 0}
+    POSITION_LIMITS = {"STARFRUIT": 20, "AMETHYSTS": 20}
 
-    def generate_bid_ask_prices(self, mid_price: float, spread: float, position_weight: float):
-        ask_price = mid_price + ((spread * mid_price) * position_weight)
-        bid_price = mid_price - ((spread * mid_price) * position_weight)
+    def generate_bid_ask_prices(
+        self, mid_price: float, spread: float, position_weight: float
+    ):
+        ask_price = mid_price + (spread * position_weight)
+        bid_price = mid_price - (spread * position_weight)
 
         return bid_price, ask_price
 
     def calculate_mid_price(self, best_ask, best_bid):
         return (best_ask + best_bid) / 2
-    
+
     def get_bb_ba(self, state: TradingState, product: str):
         result = []
         if len(state.order_depths[product].buy_orders) != 0:
-            bids = sorted(list(state.order_depths[product].buy_orders.keys()), reverse=True)
+            bids = sorted(
+                list(state.order_depths[product].buy_orders.keys()), reverse=True
+            )
             result.append(bids[0])
         else:
             result.append(None)
@@ -36,7 +40,6 @@ class Trader:
         else:
             result.append(None)
         return result[0], result[1]
-
 
     def calculate_spreads(self, trader_data_DICT, products):
         spreads = {}
@@ -58,27 +61,29 @@ class Trader:
             spreads[product] = spread
 
         return spreads
-    
+
     def values_extract(self, order_dict, buy=0):
         tot_vol = 0
         best_val = -1
         mxvol = -1
 
         for ask, vol in order_dict.items():
-            if(buy==0):
+            if buy == 0:
                 vol *= -1
             tot_vol += vol
             if tot_vol > mxvol:
                 mxvol = vol
                 best_val = ask
-        
+
         return tot_vol, best_val
-    
+
     def compute_orders(self, product, order_depth, acc_bid, acc_ask):
         orders: list[Order] = []
 
         osell = collections.OrderedDict(sorted(order_depth.sell_orders.items()))
-        obuy = collections.OrderedDict(sorted(order_depth.buy_orders.items(), reverse=True))
+        obuy = collections.OrderedDict(
+            sorted(order_depth.buy_orders.items(), reverse=True)
+        )
 
         sell_vol, best_sell_pr = self.values_extract(osell)
         buy_vol, best_buy_pr = self.values_extract(obuy, 1)
@@ -88,28 +93,32 @@ class Trader:
         mx_with_buy = -1
 
         for ask, vol in osell.items():
-            if ((ask < acc_bid) or ((self.position[product]<0) and (ask == acc_bid))) and cpos < self.POSITION_LIMITS[product]:
+            if (
+                (ask < acc_bid) or ((self.position[product] < 0) and (ask == acc_bid))
+            ) and cpos < self.POSITION_LIMITS[product]:
                 mx_with_buy = max(mx_with_buy, ask)
                 order_for = min(-vol, self.POSITION_LIMITS[product] - cpos)
                 cpos += order_for
-                assert(order_for >= 0)
+                assert order_for >= 0
                 orders.append(Order(product, ask, order_for))
 
         cpos = self.position[product]
 
         for bid, vol in obuy.items():
-            if ((bid > acc_ask) or ((self.position[product]>0) and (bid == acc_ask))) and cpos > -self.POSITION_LIMITS[product]:
+            if (
+                (bid > acc_ask) or ((self.position[product] > 0) and (bid == acc_ask))
+            ) and cpos > -self.POSITION_LIMITS[product]:
                 order_for = max(-vol, -self.POSITION_LIMITS[product] - cpos)
                 # order_for is a negative number denoting how much we will sell
                 cpos += order_for
-                assert(order_for <= 0)
+                assert order_for <= 0
                 orders.append(Order(product, bid, order_for))
 
         return orders
-    
+
     def calculate_position_weights(self):
         total_pos = sum([abs(x) for x in list(self.position.values())])
-        position_weights = {"STARFRUIT" : 0, "AMETHYSTS": 0}
+        position_weights = {"STARFRUIT": 0, "AMETHYSTS": 0}
         if total_pos == 0:
             for key in position_weights.keys():
                 position_weights[key] = 1
@@ -155,8 +164,12 @@ class Trader:
         for product in products:
             bb, ba = self.get_bb_ba(state, product)
             mid_price = self.calculate_mid_price(ba, bb)
-            acc_bid, acc_ask = self.generate_bid_ask_prices(mid_price, 0.025, position_weights[product])
-            result[product] = self.compute_orders(product, state.order_depths[product], acc_bid, acc_ask)
+            acc_bid, acc_ask = self.generate_bid_ask_prices(
+                mid_price, 0.25, position_weights[product]
+            )
+            result[product] = self.compute_orders(
+                product, state.order_depths[product], acc_bid, acc_ask
+            )
 
             print("ACC BID:", acc_bid)
             print("BEST BID:", ba)
