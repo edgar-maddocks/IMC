@@ -13,8 +13,8 @@ class Trader:
 
     position = {"STARFRUIT": 0, "AMETHYSTS": 0}
     POSITION_LIMITS = {"STARFRUIT": 20, "AMETHYSTS": 20}
-    first_signal = {"STARFRUIT": False, "AMETHYSTS": False}
-    short_sma_above = {"STARTFRUIT": False, "AMETHYSTS": False}
+    starfruit_first_signal = False
+    starfruit_short_sma_above = False
 
     def calculate_mid_price(self, best_ask, best_bid):
         return (best_ask + best_bid) / 2
@@ -199,10 +199,15 @@ class Trader:
         serialized_trader_data_DICT = jsonpickle.dumps(trader_data_DICT)
         traderData = serialized_trader_data_DICT
 
-        if state.timestamp < (50 * 100):
-            pass
-        else:
-            for product in products:
+        for product in products:
+            if product == "AMETHYSTS":
+                acc_bid = 10000
+                acc_ask = 10000
+
+                result[product] = self.compute_orders(
+                    product, state.order_depths[product], acc_bid, acc_ask
+                )
+            elif product == "STARFRUIT" and state.timestamp > (50 * 100):
                 product_prices = self.get_past_prices(trader_data_DICT, product)
                 mid_prices = (product_prices["BID"] + product_prices["ASK"]) / 2
                 short_sma = np.mean(mid_prices[-int(len(mid_prices) * 0.65) :])
@@ -214,12 +219,12 @@ class Trader:
                 total_buy_vol, _ = self.values_extract(
                     state.order_depths[product].sell_orders
                 )
-                if self.first_signal[product] is False:
-                    self.short_sma_above[product] = (
+                if self.starfruit_first_signal is False:
+                    self.starfruit_short_sma_above = (
                         True if short_sma > long_sma else False
                     )
-                    self.first_signal[product] = True
-                elif short_sma > long_sma and self.short_sma_above[product] is False:
+                    self.starfruit_first_signal = True
+                elif short_sma > long_sma and self.starfruit_short_sma_above is False:
                     result[product] = self.fill_orders(
                         product,
                         state.order_depths[product],
@@ -227,15 +232,15 @@ class Trader:
                         buy=1,
                     )
                     print("BUYING", product)
-                    self.short_sma_above[product] = True
-                elif short_sma < long_sma and self.short_sma_above[product] is True:
+                    self.starfruit_short_sma_above = True
+                elif short_sma < long_sma and self.starfruit_short_sma_above is True:
                     result[product] = self.fill_orders(
                         product,
                         state.order_depths[product],
                         20,
                     )
                     print("SELLING", product)
-                    self.short_sma_above[product] = False
+                    self.starfruit_short_sma_above = False
 
         # Sample conversion request. Check more details below.
         conversions = 1
