@@ -8,14 +8,15 @@ import matplotlib.pyplot as plt
 data = pd.read_csv("starfruit_test.csv", sep=";")
 data = data[data["product"] == "STARFRUIT"]
 data = data.drop("day", axis=1)
-data = data[["mid_price", "timestamp"]]
+data["total_volume"] = data["bid_volume_1"].fillna(0) + data["bid_volume_2"].fillna(0) + data["bid_volume_3"].fillna(0) + data["ask_volume_1"].fillna(0) + data["ask_volume_2"].fillna(0) + data["ask_volume_3"].fillna(0)
+data = data[["mid_price", "timestamp", "total_volume"]]
 data = data.set_index("timestamp")
-data["previous_price"] = data["mid_price"].shift()
+data["previous_price1"] = data["mid_price"].shift()
 data["next_price"] = data["mid_price"].shift(-1)
 data = data.dropna()
+print(data)
 
-
-X = data[["previous_price", "mid_price"]]
+X = data[["previous_price1", "mid_price", "total_volume"]]
 y = data["next_price"]
 
 X = X.to_numpy()

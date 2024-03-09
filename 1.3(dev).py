@@ -35,12 +35,15 @@ class Trader:
             result.append(None)
         return result[0], result[1]
 
-    def calc_next_star_mid(self, inputs):
-        weights = [0.45609679, 0.53953237]
-        intercept = [21.71188633]
+    def calc_next_star_mid(self, price_inputs, total_vol):
+        price_weights = [0.45390231, 0.54349532]
+        vol_weight = 0.00561923
+        intercept = 12.61033821
         next_price = intercept
-        for i, val in enumerate(inputs):
-            next_price += val * weights[i]
+        for i, val in enumerate(price_inputs):
+            next_price += val * price_weights[i]
+
+        next_price += total_vol * vol_weight
 
         return int(round(next_price))
 
@@ -180,7 +183,7 @@ class Trader:
         elif state.timestamp != 0:
             trader_data_DICT = jsonpickle.loads(state.traderData)
             trader_data_DICT[state.timestamp] = available_orders
-            if state.timestamp > (3 * 100):
+            if state.timestamp > (2 * 100):
                 lowest_key = min([int(key) for key in trader_data_DICT.keys()])
                 del trader_data_DICT[str(lowest_key)]
 
@@ -188,17 +191,22 @@ class Trader:
         traderData = serialized_trader_data_DICT
 
         for product in products:
-            if product == "AMETHYSTS":
-                acc_bid = 10000
-                acc_ask = 10000
+            # if product == "AMETHYSTS":
+            #     acc_bid = 10000
+            #     acc_ask = 10000
 
-                result[product] = self.compute_orders(
-                    product, state.order_depths[product], acc_bid, acc_ask
-                )
-            elif product == "STARFRUIT" and state.timestamp > (3 * 100):
+            #     result[product] = self.compute_orders(
+            #         product, state.order_depths[product], acc_bid, acc_ask
+            #     )
+            if product == "STARFRUIT" and state.timestamp > (2 * 100):
                 product_prices = self.get_past_prices(trader_data_DICT, product)
+                tot_buy_vol = self.values_extract(state.order_depths[product].buy_orders)[0]
+                tot_sell_vol = self.values_extract(state.order_depths[product].sell_orders)[0]
                 mid_prices = (product_prices["BID"] + product_prices["ASK"]) / 2
-                next_price = self.calc_next_star_mid(mid_prices[-2:].tolist())
+                next_price = self.calc_next_star_mid(mid_prices[-2:].tolist(), (abs(tot_buy_vol) + abs(tot_sell_vol)))
+                print("MID PRICE:", mid_prices[-1])
+                print("PRED PRICE:", next_price)
+                
                 result[product] = self.compute_orders(
                     product, state.order_depths[product], next_price + 1, next_price - 1
                 )
