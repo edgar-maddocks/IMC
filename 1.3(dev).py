@@ -13,39 +13,16 @@ class Trader:
 
     position = {"STARFRUIT": 0, "AMETHYSTS": 0}
     POSITION_LIMITS = {"STARFRUIT": 20, "AMETHYSTS": 20}
-    starfruit_first_signal = False
-    starfruit_short_sma_above = False
 
-    def calculate_mid_price(self, best_ask, best_bid):
-        return (best_ask + best_bid) / 2
-
-    def get_bb_ba(self, state: TradingState, product: str):
-        result = []
-        if len(state.order_depths[product].buy_orders) != 0:
-            bids = sorted(
-                list(state.order_depths[product].buy_orders.keys()), reverse=True
-            )
-            result.append(bids[0])
-        else:
-            result.append(None)
-        if len(state.order_depths[product].sell_orders) != 0:
-            asks = sorted(list(state.order_depths[product].sell_orders.keys()))
-            result.append(asks[0])
-        else:
-            result.append(None)
-        return result[0], result[1]
-
-    def calc_next_star_mid(self, price_inputs, total_vol):
-        price_weights = [0.45390231, 0.54349532]
-        vol_weight = 0.00561923
-        intercept = 12.61033821
+    def calc_next_star_mid(self, price_inputs):
+        price_weights = [0.46459564, 0.53203058]
+        intercept = 16.7752272
         next_price = intercept
+
         for i, val in enumerate(price_inputs):
             next_price += val * price_weights[i]
 
-        next_price += total_vol * vol_weight
-
-        return int(round(next_price))
+        return next_price
 
     def values_extract(self, order_dict, buy=0):
         tot_vol = 0
@@ -87,6 +64,29 @@ class Trader:
                 assert order_for >= 0
                 orders.append(Order(product, ask, order_for))
 
+        undercut_buy = best_buy_pr + 1
+        undercut_sell = best_sell_pr - 1
+
+        bid_pr = min(
+            undercut_buy, acc_bid - 1
+        )  # we will shift this by 1 to beat this price
+        sell_pr = max(undercut_sell, acc_ask + 1)
+
+        if (cpos < self.POSITION_LIMITS[product]) and (self.position[product] < 0):
+            num = min(40, self.POSITION_LIMITS[product] - cpos)
+            orders.append(Order(product, min(undercut_buy + 1, acc_bid - 1), num))
+            cpos += num
+
+        if (cpos < self.POSITION_LIMITS[product]) and (self.position[product] > 15):
+            num = min(40, self.POSITION_LIMITS[product] - cpos)
+            orders.append(Order(product, min(undercut_buy - 1, acc_bid - 1), num))
+            cpos += num
+
+        if cpos < self.POSITION_LIMITS[product]:
+            num = min(40, self.POSITION_LIMITS[product] - cpos)
+            orders.append(Order(product, bid_pr, num))
+            cpos += num
+
         cpos = self.position[product]
 
         for bid, vol in obuy.items():
@@ -98,6 +98,77 @@ class Trader:
                 cpos += order_for
                 assert order_for <= 0
                 orders.append(Order(product, bid, order_for))
+
+        if (cpos > -self.POSITION_LIMITS[product]) and (self.position[product] > 0):
+            num = max(-40, -self.POSITION_LIMITS[product] - cpos)
+            orders.append(Order(product, max(undercut_sell - 1, acc_ask + 1), num))
+            cpos += num
+
+        if (cpos > -self.POSITION_LIMITS[product]) and (self.position[product] < -15):
+            num = max(-40, -self.POSITION_LIMITS[product] - cpos)
+            orders.append(Order(product, max(undercut_sell + 1, acc_ask + 1), num))
+            cpos += num
+
+        if cpos > -self.POSITION_LIMITS[product]:
+            num = max(-40, -self.POSITION_LIMITS[product] - cpos)
+            orders.append(Order(product, sell_pr, num))
+            cpos += num
+
+        return orders
+
+    def compute_orders_regression(self, product, order_depth, acc_bid, acc_ask):
+        orders: list[Order] = []
+
+        osell = collections.OrderedDict(sorted(order_depth.sell_orders.items()))
+        obuy = collections.OrderedDict(
+            sorted(order_depth.buy_orders.items(), reverse=True)
+        )
+
+        sell_vol, best_sell_pr = self.values_extract(osell)
+        buy_vol, best_buy_pr = self.values_extract(obuy, 1)
+
+        cpos = self.position[product]
+
+        for ask, vol in osell.items():
+            if (
+                (ask <= acc_bid)
+                or ((self.position[product] < 0) and (ask == acc_bid + 1))
+            ) and cpos < self.POSITION_LIMITS[product]:
+                order_for = min(-vol, self.POSITION_LIMITS[product] - cpos)
+                cpos += order_for
+                assert order_for >= 0
+                orders.append(Order(product, ask, order_for))
+
+        undercut_buy = best_buy_pr + 1
+        undercut_sell = best_sell_pr - 1
+
+        bid_pr = min(
+            undercut_buy, acc_bid
+        )  # we will shift this by 1 to beat this price
+        sell_pr = max(undercut_sell, acc_ask)
+
+        if cpos < self.POSITION_LIMITS[product]:
+            num = self.POSITION_LIMITS[product] - cpos
+            orders.append(Order(product, bid_pr, num))
+            cpos += num
+
+        cpos = self.position[product]
+
+        for bid, vol in obuy.items():
+            if (
+                (bid >= acc_ask)
+                or ((self.position[product] > 0) and (bid + 1 == acc_ask))
+            ) and cpos > -self.POSITION_LIMITS[product]:
+                order_for = max(-vol, -self.POSITION_LIMITS[product] - cpos)
+                # order_for is a negative number denoting how much we will sell
+                cpos += order_for
+                assert order_for <= 0
+                orders.append(Order(product, bid, order_for))
+
+        if cpos > -self.POSITION_LIMITS[product]:
+            num = -self.POSITION_LIMITS[product] - cpos
+            orders.append(Order(product, sell_pr, num))
+            cpos += num
 
         return orders
 
@@ -120,44 +191,6 @@ class Trader:
                 prices["ASK"] = asks
 
         return prices
-
-    def fill_orders(self, product, order_depth, order_vol, buy=0):
-        orders: list[Order] = []
-
-        osell = collections.OrderedDict(sorted(order_depth.sell_orders.items()))
-        obuy = collections.OrderedDict(
-            sorted(order_depth.buy_orders.items(), reverse=True)
-        )
-
-        cpos = self.position[product]
-
-        if buy == 0:
-            available_vol = 0
-            for bid, vol in obuy.items():
-                available_vol += abs(vol)
-                if available_vol < order_vol:
-                    continue
-                else:
-                    if cpos > 0:
-                        order_vol += cpos
-                    if abs(cpos + (-order_vol)) > self.POSITION_LIMITS[product]:
-                        order_vol = self.POSITION_LIMITS[product] - abs(cpos)
-                    orders.append(Order(product, bid, -order_vol))
-
-        if buy == 1:
-            available_vol = 0
-            for ask, vol in osell.items():
-                available_vol += abs(vol)
-                if available_vol < order_vol:
-                    continue
-                else:
-                    if cpos < 0:
-                        order_vol -= cpos
-                    if abs(cpos + order_vol) > self.POSITION_LIMITS[product]:
-                        order_vol = self.POSITION_LIMITS[product] - abs(cpos)
-                    orders.append(Order(product, ask, -order_vol))
-
-        return orders
 
     def run(self, state: TradingState):
         for product, pos in state.position.items():
@@ -183,7 +216,7 @@ class Trader:
         elif state.timestamp != 0:
             trader_data_DICT = jsonpickle.loads(state.traderData)
             trader_data_DICT[state.timestamp] = available_orders
-            if state.timestamp > (2 * 100):
+            if state.timestamp > (3 * 100):
                 lowest_key = min([int(key) for key in trader_data_DICT.keys()])
                 del trader_data_DICT[str(lowest_key)]
 
@@ -198,17 +231,15 @@ class Trader:
             #     result[product] = self.compute_orders(
             #         product, state.order_depths[product], acc_bid, acc_ask
             #     )
-            if product == "STARFRUIT" and state.timestamp > (2 * 100):
+            if product == "STARFRUIT" and state.timestamp > (3 * 100):
                 product_prices = self.get_past_prices(trader_data_DICT, product)
-                tot_buy_vol = self.values_extract(state.order_depths[product].buy_orders)[0]
-                tot_sell_vol = self.values_extract(state.order_depths[product].sell_orders)[0]
                 mid_prices = (product_prices["BID"] + product_prices["ASK"]) / 2
-                next_price = self.calc_next_star_mid(mid_prices[-2:].tolist(), (abs(tot_buy_vol) + abs(tot_sell_vol)))
+                next_price = self.calc_next_star_mid(mid_prices[-2:].tolist())
                 print("MID PRICE:", mid_prices[-1])
                 print("PRED PRICE:", next_price)
-                
-                result[product] = self.compute_orders(
-                    product, state.order_depths[product], next_price + 1, next_price - 1
+
+                result[product] = self.compute_orders_regression(
+                    product, state.order_depths[product], next_price - 1, next_price + 1
                 )
 
         # Sample conversion request. Check more details below.
