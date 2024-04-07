@@ -15,14 +15,21 @@ class Trader:
     POSITION_LIMITS = {"STARFRUIT": 20, "AMETHYSTS": 20}
 
     def calc_next_star_mid(self, price_inputs):
-        price_weights = [0.08715929, 0.1272311,  0.14252712, 0.1932704,  0.18930706, 0.26054049]
+        price_weights = [
+            0.08715929,
+            0.1272311,
+            0.14252712,
+            0.1932704,
+            0.18930706,
+            0.26054049,
+        ]
         intercept = -0.24432057
         next_price = intercept
 
         for i, val in enumerate(price_inputs):
             next_price += val * price_weights[i]
 
-        return next_price
+        return int(round(next_price))
 
     def values_extract(self, order_dict, buy=0):
         tot_vol = 0
@@ -216,7 +223,7 @@ class Trader:
         elif state.timestamp != 0:
             trader_data_DICT = jsonpickle.loads(state.traderData)
             trader_data_DICT[state.timestamp] = available_orders
-            if state.timestamp > (10 * 100):
+            if state.timestamp > (6 * 100):
                 lowest_key = min([int(key) for key in trader_data_DICT.keys()])
                 del trader_data_DICT[str(lowest_key)]
 
@@ -231,7 +238,7 @@ class Trader:
                 result[product] = self.compute_orders(
                     product, state.order_depths[product], acc_bid, acc_ask
                 )
-            if product == "STARFRUIT" and state.timestamp > (10 * 100):
+            if product == "STARFRUIT" and state.timestamp > (6 * 100):
                 product_prices = self.get_past_prices(trader_data_DICT, product)
                 mid_prices = (product_prices["BID"] + product_prices["ASK"]) / 2
                 next_price = self.calc_next_star_mid(mid_prices[-6:].tolist())
