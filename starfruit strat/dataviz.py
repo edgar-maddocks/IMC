@@ -22,5 +22,8 @@ data["previous_price1"] = data["mid_price"].shift()
 data["next_price"] = data["mid_price"].shift(-1)
 data = data.dropna()
 
-autocorrelation_plot(data["mid_price"])
+data["rets"] = data["mid_price"].pct_change()
+
+plt.plot(data["mid_price"])
+plt.plot(data["mid_price"].rolling(24).mean())
 plt.show()

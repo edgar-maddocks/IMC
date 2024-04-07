@@ -15,14 +15,21 @@ class Trader:
     POSITION_LIMITS = {"STARFRUIT": 20, "AMETHYSTS": 20}
 
     def calc_next_star_mid(self, price_inputs):
-        price_weights = [0.08715929, 0.1272311,  0.14252712, 0.1932704,  0.18930706, 0.26054049]
+        price_weights = [
+            0.08715929,
+            0.1272311,
+            0.14252712,
+            0.1932704,
+            0.18930706,
+            0.26054049,
+        ]
         intercept = -0.24432057
         next_price = intercept
 
         for i, val in enumerate(price_inputs):
             next_price += val * price_weights[i]
 
-        return next_price
+        return int(round(next_price))
 
     def values_extract(self, order_dict, buy=0):
         tot_vol = 0
