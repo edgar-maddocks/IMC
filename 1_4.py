@@ -378,8 +378,8 @@ class Trader:
                 product_prices = self.get_past_prices(trader_data_DICT, product)
                 mid_prices = (product_prices["BID"] + product_prices["ASK"]) / 2
                 next_price = self.calc_next_star_mid(mid_prices[-6:].tolist())
-                print("MID PRICE:", mid_prices[-1])
-                print("PRED PRICE:", next_price)
+                logger.print("MID PRICE:", mid_prices[-1])
+                logger.print("PRED PRICE:", next_price)
 
                 result[product] = self.compute_orders_regression(
                     product, state.order_depths[product], next_price - 1, next_price + 1

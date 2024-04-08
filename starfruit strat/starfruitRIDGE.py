@@ -5,7 +5,13 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score, mean_squared_error
 import matplotlib.pyplot as plt
 
-data = pd.read_csv("starfruit strat/starfruit_test.csv", sep=";")
+data = pd.read_csv("round-1-island-data-bottle/prices_round_1_day_-2.csv", sep=";")
+data = pd.concat(
+    [data, pd.read_csv("round-1-island-data-bottle/prices_round_1_day_-1.csv", sep=";")]
+)
+data = pd.concat(
+    [data, pd.read_csv("round-1-island-data-bottle/prices_round_1_day_0.csv", sep=";")]
+)
 data = data[data["product"] == "STARFRUIT"]
 data = data.drop("day", axis=1)
 data["total_volume"] = (
@@ -19,7 +25,6 @@ data["total_volume"] = (
 data = data[["mid_price", "timestamp", "total_volume"]]
 data = data.set_index("timestamp")
 
-data["sma_25"] = data["mid_price"].rolling(25).mean()
 data["previous_price5"] = data["mid_price"].shift(5)
 data["previous_price4"] = data["mid_price"].shift(4)
 data["previous_price3"] = data["mid_price"].shift(3)
@@ -48,7 +53,7 @@ x_train, x_test, y_train, y_test = train_test_split(
 )
 
 
-model = Lasso()
+model = Ridge()
 model.fit(x_train, y_train)
 
 preds = model.predict(x_test)

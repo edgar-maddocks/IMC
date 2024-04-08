@@ -16,14 +16,14 @@ class Trader:
 
     def calc_next_star_mid(self, price_inputs):
         price_weights = [
-            0.08715929,
-            0.1272311,
-            0.14252712,
-            0.1932704,
-            0.18930706,
-            0.26054049,
+            0.09497349,
+            0.10797433,
+            0.11837098,
+            0.15644577,
+            0.22009514,
+            0.30172641,
         ]
-        intercept = -0.24432057
+        intercept = 2.09558459
         next_price = intercept
 
         for i, val in enumerate(price_inputs):
