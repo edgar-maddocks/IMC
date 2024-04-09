@@ -21,7 +21,7 @@ def metric(args, random_reserves):
     return sum(profits) / len(random_reserves)
 
 
-rands = np.random.rand(1000000)
+rands = np.random.rand(100000000)
 random_reserves = cdf(rands)
 
-print(metric((950, 970), random_reserves))
+print(metric((952, 978), random_reserves))
