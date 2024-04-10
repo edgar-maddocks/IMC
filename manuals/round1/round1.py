@@ -1,16 +1,11 @@
 import scipy
 import numpy as np
 import scipy.optimize
+import numba
+import time
 
 
-def cdf(x):
-    return 100 * (np.sqrt(x) + 9)
-
-
-def profit(bid):
-    return 1000 - bid
-
-
+@numba.jit(nopython=True)
 def metric(args, random_reserves):
     profits = []
     for x in random_reserves:
@@ -21,6 +16,43 @@ def metric(args, random_reserves):
     return sum(profits) / len(random_reserves)
 
 
-rands = np.random.rand(100000000)
-random_reserves = cdf(rands)
-print(metric((952, 978), random_reserves))
+@numba.jit(nopython=True)
+def create_grid(bounds):
+    tuples = []
+    for i in range(bounds[0], bounds[1]):
+        for j in range(bounds[0], bounds[1]):
+            if i > j:
+                continue
+            else:
+                tuples.append((i, j))
+
+    return tuples
+
+
+@numba.jit(nopython=True)
+def main():
+    def cdf(x):
+        return 100 * (np.sqrt(x) + 9)
+
+    n_samples = 10000000
+    rands = np.random.rand(n_samples)
+    random_reserves = cdf(rands)
+    grid = create_grid((900, 1000))
+    vals = {}
+    count = 0
+    n_pairs = len(grid)
+    for pair in grid:
+        count += 1
+        print(f"Simulating pair {count} / {n_pairs} on {n_samples} samples")
+        vals[pair] = metric(pair, random_reserves)
+
+    return vals
+
+
+start = time.time()
+
+vals = main()
+print("\n")
+print(max(vals, key=lambda key: vals[key]))
+print(max(vals.values()))
+print("Time taken: ", time.time() - start)
