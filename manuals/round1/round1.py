@@ -23,5 +23,4 @@ def metric(args, random_reserves):
 
 rands = np.random.rand(100000000)
 random_reserves = cdf(rands)
-
 print(metric((952, 978), random_reserves))
