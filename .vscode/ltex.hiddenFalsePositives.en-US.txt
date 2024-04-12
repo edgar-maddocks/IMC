@@ -1,0 +1,5 @@
+{"rule":"UPPERCASE_SENTENCE_START","sentence":"^\\Qframe=tb, language=Python, aboveskip=3mm, belowskip=3mm, showstringspaces=false, columns=flexible, basicstyle=, numbers=none, numberstyle=, keywordstyle=, commentstyle=, stringstyle=, breaklines=true, breakatwhitespace=true, tabsize=3\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_US","sentence":"^\\QA question in auction theory Edgar Maddocks April 2024\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_US","sentence":"^\\QPlot of objective function with \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q and \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q values in the range \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q in desmos\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_US","sentence":"^\\QPlot of objective function with \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q and \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q values in the range \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q in Desmos\\E$"}
+{"rule":"LC_AFTER_PERIOD","sentence":"^\\QNow, using the minimize function from SciPy.optimize, with the metric being to minimize the negative profit per fish i.e. maximize profit per fish on 1 million samples, the optimal pair is yet again (952.2, 978.2).\\E$"}

@@ -13,7 +13,7 @@ def metric(args, random_reserves):
             profits.append(1000 - args[0])
         elif args[1] > x:
             profits.append(1000 - args[1])
-    return sum(profits) / len(random_reserves)
+    return -sum(profits) / len(random_reserves)
 
 
 @numba.jit(nopython=True)
@@ -30,7 +30,7 @@ def create_grid(bounds):
 
 
 @numba.jit(nopython=True)
-def main():
+def grid_search():
     def cdf(x):
         return 100 * (np.sqrt(x) + 9)
 
@@ -49,10 +49,34 @@ def main():
     return vals
 
 
+def scipyoptim():
+    def cdf(x):
+        return 100 * (np.sqrt(x) + 9)
+
+    n_samples = 10000000
+    rands = np.random.rand(n_samples)
+    random_reserves = cdf(rands)
+    result = (
+        scipy.optimize.minimize(
+            metric,
+            [900, 1000],
+            random_reserves,
+            "Powell",
+            bounds=[(900, 1000)],
+            options={"disp": True},
+        ),
+    )
+
+    return result
+
+
 start = time.time()
 
-vals = main()
+"""vals = grid_search()
 print("\n")
 print(max(vals, key=lambda key: vals[key]))
 print(max(vals.values()))
-print("Time taken: ", time.time() - start)
+print("Time taken: ", time.time() - start)"""
+
+result = scipyoptim()
+print(result)

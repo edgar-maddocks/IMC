@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.4.10)  10 APR 2024 23:37
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.4.10)  11 APR 2024 11:37
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -231,84 +231,51 @@ Package: amsfonts 2013/01/14 v3.01 Basic AMSFonts support
 \symAMSb=\mathgroup5
 LaTeX Font Info:    Overwriting math alphabet `\mathfrak' in version `bold'
 (Font)                  U/euf/m/n --> U/euf/b/n on input line 106.
-)) (c:/texlive/2024/texmf-dist/tex/latex/listings/listings.sty
-\lst@mode=\count293
-\lst@gtempboxa=\box60
-\lst@token=\toks26
-\lst@length=\count294
-\lst@currlwidth=\dimen178
-\lst@column=\count295
-\lst@pos=\count296
-\lst@lostspace=\dimen179
-\lst@width=\dimen180
-\lst@newlines=\count297
-\lst@lineno=\count298
-\lst@maxwidth=\dimen181
- (c:/texlive/2024/texmf-dist/tex/latex/listings/lstpatch.sty
-File: lstpatch.sty 2024/03/11 1.10a (Carsten Heinz)
-) (c:/texlive/2024/texmf-dist/tex/latex/listings/lstmisc.sty
-File: lstmisc.sty 2024/03/11 1.10a (Carsten Heinz)
-\c@lstnumber=\count299
-\lst@skipnumbers=\count300
-\lst@framebox=\box61
-) (c:/texlive/2024/texmf-dist/tex/latex/listings/listings.cfg
-File: listings.cfg 2024/03/11 1.10a listings configuration
-))
-Package: listings 2024/03/11 1.10a (Carsten Heinz)
- (c:/texlive/2024/texmf-dist/tex/latex/graphics/color.sty
-Package: color 2022/01/06 v1.3d Standard LaTeX Color (DPC)
- (c:/texlive/2024/texmf-dist/tex/latex/graphics-cfg/color.cfg
-File: color.cfg 2016/01/02 v1.6 sample color configuration
-)
-Package color Info: Driver file: pdftex.def on input line 149.
- (c:/texlive/2024/texmf-dist/tex/latex/graphics/mathcolor.ltx)) (c:/texlive/2024/texmf-dist/tex/latex/listings/lstlang1.sty
-File: lstlang1.sty 2024/03/11 1.10a listings language file
-) (./round1.aux)
+)) (./round1.aux)
 \openout1 = `round1.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 39.
-LaTeX Font Info:    ... okay on input line 39.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 39.
-LaTeX Font Info:    ... okay on input line 39.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 39.
-LaTeX Font Info:    ... okay on input line 39.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 39.
-LaTeX Font Info:    ... okay on input line 39.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 39.
-LaTeX Font Info:    ... okay on input line 39.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 39.
-LaTeX Font Info:    ... okay on input line 39.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 39.
-LaTeX Font Info:    ... okay on input line 39.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 14.
+LaTeX Font Info:    ... okay on input line 14.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 14.
+LaTeX Font Info:    ... okay on input line 14.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 14.
+LaTeX Font Info:    ... okay on input line 14.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 14.
+LaTeX Font Info:    ... okay on input line 14.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 14.
+LaTeX Font Info:    ... okay on input line 14.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 14.
+LaTeX Font Info:    ... okay on input line 14.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 14.
+LaTeX Font Info:    ... okay on input line 14.
  (c:/texlive/2024/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count301
-\scratchdimen=\dimen182
-\scratchbox=\box62
-\nofMPsegments=\count302
-\nofMParguments=\count303
-\everyMPshowfont=\toks27
-\MPscratchCnt=\count304
-\MPscratchDim=\dimen183
-\MPnumerator=\count305
-\makeMPintoPDFobject=\count306
-\everyMPtoPDFconversion=\toks28
+\scratchcounter=\count293
+\scratchdimen=\dimen178
+\scratchbox=\box60
+\nofMPsegments=\count294
+\nofMParguments=\count295
+\everyMPshowfont=\toks26
+\MPscratchCnt=\count296
+\MPscratchDim=\dimen179
+\MPnumerator=\count297
+\makeMPintoPDFobject=\count298
+\everyMPtoPDFconversion=\toks27
 ) (c:/texlive/2024/texmf-dist/tex/latex/epstopdf-pkg/epstopdf-base.sty
 Package: epstopdf-base 2020-01-24 v2.11 Base part for package epstopdf
 Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 485.
  (c:/texlive/2024/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg
 File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Live
 ))
-\c@lstlisting=\count307
-LaTeX Font Info:    Trying to load font information for U+msa on input line 40.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 15.
  (c:/texlive/2024/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 40.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 15.
  (c:/texlive/2024/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
-Underfull \hbox (badness 10000) in paragraph at lines 62--71
+Underfull \hbox (badness 10000) in paragraph at lines 37--46
 
  []
 
@@ -318,27 +285,32 @@ Underfull \hbox (badness 10000) in paragraph at lines 62--71
 <O(b_1, b_2) plot.png, id=25, 543.83176pt x 510.10574pt>
 File: O(b_1, b_2) plot.png Graphic file (type png)
 <use O(b_1, b_2) plot.png>
-Package pdftex.def Info: O(b_1, b_2) plot.png  used on input line 171.
+Package pdftex.def Info: O(b_1, b_2) plot.png  used on input line 146.
 (pdftex.def)             Requested size: 217.52884pt x 204.03868pt.
- [4 <./O(b_1, b_2) plot.png>] [5] [6] (./round1.aux)
+ [4 <./O(b_1, b_2) plot.png>] [5] [6]
+Underfull \hbox (badness 10000) in paragraph at lines 250--258
+
+ []
+
+[7] (./round1.aux)
  ***********
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-03-14>
  ***********
  ) 
 Here is how much of TeX's memory you used:
- 4873 strings out of 474104
- 69970 string characters out of 5747502
+ 3394 strings out of 474104
+ 48099 string characters out of 5747502
  1942496 words of memory out of 5000000
- 27201 multiletter control sequences out of 15000+600000
+ 25744 multiletter control sequences out of 15000+600000
  565971 words of font info for 67 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 72i,11n,86p,303b,267s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 72i,11n,86p,303b,231s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmr5.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on round1.pdf (6 pages, 264749 bytes).
+Output written on round1.pdf (7 pages, 266954 bytes).
 PDF statistics:
- 89 PDF objects out of 1000 (max. 8388607)
- 53 compressed objects within 1 object stream
+ 94 PDF objects out of 1000 (max. 8388607)
+ 57 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  6 words of extra memory for PDF output out of 10000 (max. 10000000)
 

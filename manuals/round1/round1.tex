@@ -7,31 +7,6 @@
 \usepackage{graphicx}
 \graphicspath{C:\Users\edgar\OneDrive\Documents\Code\OptRLResearch\IMC\manuals}
 
-% FOR WRITING CODE
-\usepackage{listings}
-\usepackage{color}
-
-\definecolor{dkgreen}{rgb}{0,0.6,0}
-\definecolor{gray}{rgb}{0.5,0.5,0.5}
-\definecolor{mauve}{rgb}{0.58,0,0.82}
-
-\lstset{frame=tb,
-  language=Python,
-  aboveskip=3mm,
-  belowskip=3mm,
-  showstringspaces=false,
-  columns=flexible,
-  basicstyle={\small\ttfamily},
-  numbers=none,
-  numberstyle=\tiny\color{gray},
-  keywordstyle=\color{blue},
-  commentstyle=\color{dkgreen},
-  stringstyle=\color{mauve},
-  breaklines=true,
-  breakatwhitespace=true,
-  tabsize=3
-}
-
 \title{A question in auction theory}
 \author{Edgar Maddocks}
 \date{April 2024}
@@ -72,7 +47,7 @@ probability scales linearly from least likely at 900 to most likely at 1000.'} A
 \section*{Solution}
 \indent Firstly, we will define the probability density function of the reserve prices to be 
 $P(x)$, where $x$ is a reserve price in the interval $[900, 1000]$. We are told that $P(x)$
-scales \textbf{linearly}, and therefore it is in the form: $ax + b$. So now lets write down
+scales \textbf{linearly}, and therefore it is in the form: $ax + b$. So now let's write down
 everything we know:
 \setlength{\jot}{15pt} % set spacing between eqs. to 15pt
 \begin{gather}
@@ -129,7 +104,7 @@ higher offer. We will also let $Y$ be a random reserve price from the distributi
         \end{array}
     \right\}
 \end{equation}
-Now, in place of taking a random sample $(Y)$ we can instead multiply the profit by the probabilty of $Y$ being less
+Now, in place of taking a random sample $(Y)$ we can instead multiply the profit by the probability of $Y$ being less
 than our offers.
 Which will give us an expected value of the profit function
 \begin{equation}
@@ -164,15 +139,15 @@ for ease of notation.
 Our goal was to maximize profits from our trading. We can therefore reframe this as maximizing our
 objective function with respect to $b_1$ and $b_2$. Firstly, we can actually plot this function as a surface,
 with $x$ and $y$ as our two bids, and $z$ as the value of our objective function (expected profit) with these
-bid values and this will give us a good vizualization of our problem.
+bid values and this will give us a good visualization of our problem.
 
 \begin{figure}[h!]
     \centering
     \includegraphics[scale = 0.4]{O(b_1, b_2) plot.png}
-    \caption{Plot of objective function with $b_1$ and $b_2$ values in the range $[900,1000]$ in desmos}
+    \caption{Plot of objective function with $b_1$ and $b_2$ values in the range $[900,1000]$ in Desmos}
 \end{figure}
 
-Now, with this vizualization, we can clearly see the shape of the objective function and the maxima that we are
+Now, with this visualization, we can clearly see the shape of the objective function and the maxima that we are
 trying to locate. To determine the location of a stationary point on a surface, we can take the partial derivatives
 of $O(b_1, b_2)$ with respect to each input $(b_1, b_2)$ and set both equal to zero.
 \begin{gather}
@@ -220,7 +195,7 @@ Simplifying and solving for $b_2$
 
 \section*{Checks}
 Now we have solved for our two offers which maximize our objective function.
-However, if you remember, our bids must be integers. Therefore we could just round
+However, if you remember, our bids must be integers. Therefore, we could just round
 to the nearest integer, giving values of $b_1 = 952$ and $b_2 = 978$, however I will
 complete a small grid search to ensure the rounding produces the optimal values.
 
@@ -247,7 +222,7 @@ objective function as $b_1$ and $b_2$. Doing so produces the following results
         \hline
         $O(b_1, b_2)$ & 952 & 953 \\
         \hline
-        978 & 20.4125 & 20.4073 \\
+        978 & 20.4152 & 20.4073 \\
         \hline
         979 & 20.4069 & 20.4095 \\
         \hline
@@ -256,6 +231,38 @@ objective function as $b_1$ and $b_2$. Doing so produces the following results
 
 After completing this quick grid search, we get the final result that the optimal value for
 $b_1$ is $952$, and the optimal value for $b_2$ is $978$.
+
+\section*{Simulation}
+After creating a simulation to run locally in the form of a basic python script, I 
+completed an exhaustive grid search, as well as a SciPy optimization. 
+
+I first chose to run the simulation on 1 million samples from the distribution, and then 
+generated random reserve prices by first generating random values in the range $[0, 1]$ and 
+then using the inverse of the cumulative distribution function of reserve prices to 
+generate the reserve price samples. 
+
+For the grid search, I then created a list of tuples which contained every combination 
+of different low and high offers. This resulted in just over 5000 different combinations 
+of prices. After evaluating each of these pairs on 1 million samples, the best performing 
+pair was also $(952, 978)$. With a simulated profit per fish of 20.4195. This search took 
+approx. 60.2 seconds.
+
+\textbf{Note:} After rerunning this search with 10 samples, pair $(952, 978)$ was still the 
+highest performing, scoring a profit per fish of 20.4218. With the simulation taking 828 seconds 
+(13 minutes 48 seconds).
+\\
+\\
+\indent Now, using the minimize function from SciPy.optimize, with the metric being to minimize 
+the negative profit per fish i.e. maximize profit per fish on 1 million samples, the optimal pair 
+is yet again (952.2, 978.2). With a profit per fish of 20.3968.
+
+\textbf{Note:} After running this simulation again with 10 million samples, the optimal pair was again 
+$(952.2 ,978.2)$
+
+\section*{Conclusion}
+A lower bid of 952 and a higher bid of 978 is most certainly the optimal answer for this question, 
+averaging a profit per fish of ~20.4 on large sample sizes of reserve prices. Backed up by not only 
+closed-form solutions, but also exhaustive grid-search and computational optimization.
 
 
 

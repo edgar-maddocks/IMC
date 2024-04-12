@@ -11,8 +11,8 @@ import collections
 
 class Trader:
 
-    position = {"STARFRUIT": 0, "AMETHYSTS": 0}
-    POSITION_LIMITS = {"STARFRUIT": 20, "AMETHYSTS": 20}
+    position = {"STARFRUIT": 0, "AMETHYSTS": 0, "ORCHIDS": 0}
+    POSITION_LIMITS = {"STARFRUIT": 20, "AMETHYSTS": 20, "ORCHIDS": 100}
 
     def calc_next_star_mid(self, price_inputs):
         price_weights = [
@@ -179,76 +179,71 @@ class Trader:
 
         return orders
 
-    def get_past_prices(self, trader_data_DICT, product):
-        prices = {}
-        bids = np.array([])
-        asks = np.array([])
-        for dict in list(trader_data_DICT.values()):
-            if len(dict[product].keys()) > 0:
-                bids = np.append(
-                    bids,
-                    np.max([float(x) for x in list(dict[product]["BID"].keys())]),
-                )
-                prices["BID"] = bids
-            if len(dict[product].keys()) > 0:
-                asks = np.append(
-                    asks,
-                    np.min([float(x) for x in list(dict[product]["ASK"].keys())]),
-                )
-                prices["ASK"] = asks
-
-        return prices
-
     def run(self, state: TradingState):
+        products = ["AMETHYSTS", "STARFRUIT", "ORCHIDS"]
+        result = {}
+
         for product, pos in state.position.items():
             self.position[product] = pos
-        # Orders to be placed on exchange matching engine
-        result = {}
-        products = []
-        available_orders = {}
+
+        data = {}
         for product in state.order_depths:
-            products.append(product)
             product_order_depth: OrderDepth = state.order_depths[product]
 
-            available_orders[product] = {}
+            best_ask, best_bid = (0, 0)
             if len(product_order_depth.buy_orders) != 0:
-                available_orders[product]["BID"] = product_order_depth.buy_orders
+                best_bid = np.max(
+                    [float(x) for x in list(product_order_depth.buy_orders.keys())]
+                )
 
             if len(product_order_depth.sell_orders) != 0:
-                available_orders[product]["ASK"] = product_order_depth.sell_orders
+                best_ask = np.min(
+                    [float(x) for x in list(product_order_depth.sell_orders.keys())]
+                )
+
+        
+            if product != "ORCHIDS":
+                data[product] = (best_bid + best_ask) / 2
+            elif product == "ORCHIDS":
+                orchid_data = state.observations.conversionObservations["ORCHIDS"]
+                data[product] = ((best_bid + best_ask) / 2, orchid_data)
+
+        print(data)
 
         if state.timestamp == 0:
             trader_data_DICT = {}
-            trader_data_DICT[state.timestamp] = available_orders
+            trader_data_DICT[state.timestamp] = data
         elif state.timestamp != 0:
             trader_data_DICT = jsonpickle.loads(state.traderData)
-            trader_data_DICT[state.timestamp] = available_orders
-            if state.timestamp > (6 * 100):
+            trader_data_DICT[state.timestamp] = data
+            if state.timestamp > (5 * 100):
                 lowest_key = min([int(key) for key in trader_data_DICT.keys()])
                 del trader_data_DICT[str(lowest_key)]
 
         serialized_trader_data_DICT = jsonpickle.dumps(trader_data_DICT)
-        traderData = serialized_trader_data_DICT
 
         for product in products:
-            if product == "AMETHYSTS":
+            """if product == "AMETHYSTS":
                 acc_bid = 10000
                 acc_ask = 10000
 
                 result[product] = self.compute_orders(
                     product, state.order_depths[product], acc_bid, acc_ask
                 )
-            if product == "STARFRUIT" and state.timestamp > (6 * 100):
-                product_prices = self.get_past_prices(trader_data_DICT, product)
-                mid_prices = (product_prices["BID"] + product_prices["ASK"]) / 2
-                next_price = self.calc_next_star_mid(mid_prices[-6:].tolist())
-                print("MID PRICE:", mid_prices[-1])
-                print("PRED PRICE:", next_price)
+            if product == "STARFRUIT" and state.timestamp > (5 * 100):
+                mid_prices = [x["STARFRUIT"] for x in list(trader_data_DICT.values())]
+                print(mid_prices)                
+                next_price = self.calc_next_star_mid(mid_prices)
 
                 result[product] = self.compute_orders_regression(
                     product, state.order_depths[product], next_price - 1, next_price + 1
-                )
+                )"""
+            if product == "ORCHIDS" and state.timestamp > 0:
+                pass
+                #past_orchid_datas = [x["ORCHIDS"][1] for x in list(trader_data_DICT.values())]
+                # holds properties of bidPrice, askPrice, transportFees, exportTariff, importTariff, sunlight, humidity
+
 
         # Sample conversion request. Check more details below.
         conversions = 1
-        return result, conversions, traderData
+        return result, conversions, serialized_trader_data_DICT
