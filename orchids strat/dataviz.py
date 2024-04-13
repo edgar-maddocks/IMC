@@ -8,8 +8,21 @@ day0 = pd.read_csv(day_0, sep=";")
 day1 = pd.read_csv(day_1, sep=";")
 day2 = pd.read_csv(day_2, sep=";")
 
+day1["timestamp"] += 1000000
+day2["timestamp"] += 2000000
+
 data = pd.concat([day0, day1, day2])
 data = data.set_index("timestamp")
 
-print(data)
-print(data.columns)
+
+data = data[["ORCHIDS", "SUNLIGHT"]]
+
+for i in range(5, len(data) - 5):
+    if (
+        data["SUNLIGHT"].iloc[i] / 360 < 7
+        and data["SUNLIGHT"].iloc[i + 1] / 360 < 7
+        and data["SUNLIGHT"].iloc[i + 2] / 360 < 7
+        and data["SUNLIGHT"].iloc[i + 3] / 360 > data["SUNLIGHT"].iloc[i + 2] / 360
+        and data["SUNLIGHT"].iloc[i + 4] / 360 > data["SUNLIGHT"].iloc[i + 3] / 360
+    ):
+        print("BUYING AT", data.iloc[i])

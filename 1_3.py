@@ -1,4 +1,11 @@
-from datamodel import OrderDepth, UserId, TradingState, Order, Trade
+from datamodel import (
+    OrderDepth,
+    UserId,
+    TradingState,
+    Order,
+    Trade,
+    ConversionObservation,
+)
 from typing import List, Dict
 import string
 
@@ -11,6 +18,8 @@ import collections
 
 class Trader:
 
+    slow_sma_is_above = None
+    first_cross = False
     position = {"STARFRUIT": 0, "AMETHYSTS": 0, "ORCHIDS": 0}
     POSITION_LIMITS = {"STARFRUIT": 20, "AMETHYSTS": 20, "ORCHIDS": 100}
 
@@ -182,6 +191,7 @@ class Trader:
     def run(self, state: TradingState):
         products = ["AMETHYSTS", "STARFRUIT", "ORCHIDS"]
         result = {}
+        conversions = 0
 
         for product, pos in state.position.items():
             self.position[product] = pos
@@ -201,14 +211,11 @@ class Trader:
                     [float(x) for x in list(product_order_depth.sell_orders.keys())]
                 )
 
-        
             if product != "ORCHIDS":
                 data[product] = (best_bid + best_ask) / 2
             elif product == "ORCHIDS":
                 orchid_data = state.observations.conversionObservations["ORCHIDS"]
                 data[product] = ((best_bid + best_ask) / 2, orchid_data)
-
-        print(data)
 
         if state.timestamp == 0:
             trader_data_DICT = {}
@@ -216,34 +223,66 @@ class Trader:
         elif state.timestamp != 0:
             trader_data_DICT = jsonpickle.loads(state.traderData)
             trader_data_DICT[state.timestamp] = data
-            if state.timestamp > (5 * 100):
+            if state.timestamp > (32 * 100):
                 lowest_key = min([int(key) for key in trader_data_DICT.keys()])
                 del trader_data_DICT[str(lowest_key)]
 
         serialized_trader_data_DICT = jsonpickle.dumps(trader_data_DICT)
 
         for product in products:
-            """if product == "AMETHYSTS":
+            result[product] = []
+            if product == "AMETHYSTS":
                 acc_bid = 10000
                 acc_ask = 10000
 
                 result[product] = self.compute_orders(
                     product, state.order_depths[product], acc_bid, acc_ask
                 )
-            if product == "STARFRUIT" and state.timestamp > (5 * 100):
+            if product == "STARFRUIT" and state.timestamp > (6 * 100):
                 mid_prices = [x["STARFRUIT"] for x in list(trader_data_DICT.values())]
-                print(mid_prices)                
-                next_price = self.calc_next_star_mid(mid_prices)
+                print(mid_prices)
+                next_price = self.calc_next_star_mid(mid_prices[-6:])
 
                 result[product] = self.compute_orders_regression(
                     product, state.order_depths[product], next_price - 1, next_price + 1
-                )"""
-            if product == "ORCHIDS" and state.timestamp > 0:
-                pass
-                #past_orchid_datas = [x["ORCHIDS"][1] for x in list(trader_data_DICT.values())]
-                # holds properties of bidPrice, askPrice, transportFees, exportTariff, importTariff, sunlight, humidity
+                )
+            if product == "ORCHIDS" and state.timestamp > (32 * 100):
+                ## ARBITRAGE DIFFERENCE IN BID AND ASKS OF MARKET AND CONVERSIONS
+                ## MARKET ORDER BOOK MORE VOLATILE TO CHANGES IN SUNLIGHT ETC.
+                past_orchid_data = [
+                    x["ORCHIDS"] for x in list(trader_data_DICT.values())
+                ]
 
+                """fast_sma = np.array([x[0] for x in past_orchid_data[-14:]]).mean()
+                slow_sma = np.array([x[0] for x in past_orchid_data[-32:]]).mean()
+                if self.first_cross is False and fast_sma > slow_sma:
+                    self.slow_sma_is_above = False
+                    self.first_cross = True
+                elif self.first_cross is False and slow_sma > fast_sma:
+                    self.slow_sma_is_above = True
+                    self.first_cross = True
+                if fast_sma > slow_sma and self.slow_sma_is_above is True:
+                    print("BUYING")
+                    self.slow_sma_is_above = False
+                    obuy = collections.OrderedDict(
+                        sorted(
+                            state.order_depths[product].buy_orders.items(), reverse=True
+                        )
+                    )
+                    tot_vol, best_buy = self.values_extract(obuy, buy=1)
+                    result[product].append(Order(product, best_buy, 10))
+                elif fast_sma < slow_sma and self.slow_sma_is_above is False:
+                    print("SELLING")
+                    self.slow_sma_is_above = True
+                    osell = collections.OrderedDict(
+                        sorted(state.order_depths[product].sell_orders.items())
+                    )
+                    tot_vol, best_sell = self.values_extract(osell)
+                    result[product].append(Order(product, best_sell, -10))
+                print(result)
+                print(state.order_depths["ORCHIDS"].sell_orders)
 
-        # Sample conversion request. Check more details below.
-        conversions = 1
+                if state.own_trades is not None:
+                    print("OWN TRADES: ", state.own_trades)"""
+
         return result, conversions, serialized_trader_data_DICT
