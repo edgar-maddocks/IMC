@@ -1,4 +1,7 @@
 import itertools
+import time
+
+start = time.time()
 
 conversions = {
     "P": {"P": 1, "W": 0.48, "S": 1.52, "C": 0.71},
@@ -7,23 +10,16 @@ conversions = {
     "C": {"P": 1.41, "W": 0.61, "S": 2.08, "C": 1},
 }
 
-
-def foo(l):
-    for i in itertools.product(*[l] * 4):
-        yield i
-
-
-combos = [x for x in foo(["P", "W", "S", "C"])]
-outputs = {}
-for combo in combos:
+mx_score = (-1, "")
+for combo in itertools.product(["P", "W", "S", "C"], repeat=4):
+    score = 1
     combo = ("C", *combo, "C")
-    init = 2000000
-    count = 0
-    for i, val in enumerate(combo):
-        init *= conversions[combo[i - 1]][val]
+    for i, product in enumerate(combo[1:]):
+        score *= conversions[combo[i]][product]
 
-    outputs[combo] = init
+    if score > mx_score[0]:
+        mx_score = (score, combo)
 
-opt_combo = max(outputs, key=lambda key: outputs[key])
-print(opt_combo)
-print(outputs[opt_combo])
+print("FINAL MULTIPLIER: ", mx_score[0])
+print("FINAL PATH: ", mx_score[1][1:-1])
+print("TIME ELAPSED: ", time.time() - start)

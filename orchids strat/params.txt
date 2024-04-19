@@ -1,0 +1,27 @@
+Premium -> 1 Rounding -> int()
+Final PnL -> 35231.6875
+
+Premium -> 2 Rounding -> int()
+Final PnL -> 87001.1875
+
+Premium -> 3 Rounding -> int()
+Final PnL -> 62931.5
+
+Premium -> (Own Market Spread) Roudning -> int()
+Final PnL -> 2000
+
+Premium -> (SI Market Spread) Roudning -> int()
+Final PnL -> 66257.4
+
+
+
+Premium -> 1 Rounding -> round()
+Final PnL -> 60119.875
+
+Premium -> 2 Rounding -> round()
+Final PnL -> 91376
+
+Premium -> Spread Roudning -> round()
+Final PnL -> 84770
+
+Premium -> Spread * 1.5 Rounding -> round()

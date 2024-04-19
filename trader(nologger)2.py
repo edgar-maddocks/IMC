@@ -4,24 +4,57 @@ from datamodel import (
     TradingState,
     Order,
     Trade,
-    ConversionObservation,
+    Symbol,
+    ProsperityEncoder,
+    Observation,
+    Listing,
 )
-from typing import List, Dict
-import string
+from typing import List, Dict, Any
+import json
 
 import numpy as np
-import pandas as pd
-import statistics
+import jsonpickle
+import collections
+
+from datamodel import (
+    OrderDepth,
+    UserId,
+    TradingState,
+    Order,
+    Trade,
+    Symbol,
+    ProsperityEncoder,
+    Observation,
+    Listing,
+)
+from typing import List, Dict, Any
+import json
+
+import numpy as np
 import jsonpickle
 import collections
 
 
 class Trader:
 
-    slow_sma_is_above = None
-    first_cross = False
-    position = {"STARFRUIT": 0, "AMETHYSTS": 0, "ORCHIDS": 0}
-    POSITION_LIMITS = {"STARFRUIT": 20, "AMETHYSTS": 20, "ORCHIDS": 100}
+    position = {
+        "STARFRUIT": 0,
+        "AMETHYSTS": 0,
+        "ORCHIDS": 0,
+        "CHOCOLATE": 0,
+        "STRAWBERRIES": 0,
+        "ROSES": 0,
+        "GIFT_BASKET": 0,
+    }
+    POSITION_LIMITS = {
+        "STARFRUIT": 20,
+        "AMETHYSTS": 20,
+        "ORCHIDS": 100,
+        "CHOCOLATE": 250,
+        "STRAWBERRIES": 350,
+        "ROSES": 60,
+        "GIFT_BASKET": 60,
+    }
 
     def calc_next_star_mid(self, price_inputs):
         price_weights = [
@@ -133,6 +166,7 @@ class Trader:
         return orders
 
     def compute_orders_regression(self, product, order_depth, acc_bid, acc_ask):
+
         orders: list[Order] = []
 
         osell = collections.OrderedDict(sorted(order_depth.sell_orders.items()))
@@ -188,8 +222,59 @@ class Trader:
 
         return orders
 
+    def compute_gb_orders(self, product, state, mids, component_basket_price):
+        orders = []
+        cpos = state.position.get(product, 0)
+        bid_price, bid_amount = list(state.order_depths[product].buy_orders.items())[0]
+        ask_price, ask_amount = list(state.order_depths[product].sell_orders.items())[0]
+        if mids["GIFT_BASKET"] - component_basket_price > 435.2:
+            orders.append(
+                Order(
+                    product,
+                    bid_price,
+                    max(-self.POSITION_LIMITS[product] - cpos, -bid_amount),
+                )
+            )
+            orders.append(Order(product, bid_price, -4))
+
+        elif mids["GIFT_BASKET"] - component_basket_price < 339.8:  # 337.8
+            orders.append(
+                Order(
+                    product,
+                    ask_price,
+                    min(self.POSITION_LIMITS[product] - cpos, -ask_amount),
+                )
+            )
+            orders.append(Order(product, ask_price, 4))
+
+        return orders
+
+    def compute_gb_comp_orders(self, product, state, mids, bounds):
+        orders = []
+        cpos = state.position.get(product, 0)
+        bid_price, bid_amount = list(state.order_depths[product].buy_orders.items())[0]
+        ask_price, ask_amount = list(state.order_depths[product].sell_orders.items())[0]
+        if mids["GIFT_BASKET"] / mids[product] < bounds[0]:  # 4.873
+            orders.append(
+                Order(
+                    product,
+                    bid_price,
+                    max(-self.POSITION_LIMITS[product] - cpos, -bid_amount),
+                )
+            )
+        elif mids["GIFT_BASKET"] / mids[product] > bounds[1]:  # 4.91
+            orders.append(
+                Order(
+                    product,
+                    ask_price,
+                    min(self.POSITION_LIMITS[product] - cpos, -ask_amount),
+                )
+            )
+
+        return orders
+
     def run(self, state: TradingState):
-        products = ["AMETHYSTS", "STARFRUIT", "ORCHIDS"]
+        products = ["AMETHYSTS", "STARFRUIT", "ORCHIDS", "GIFT_BASKET"]
         result = {}
         conversions = 0
 
@@ -198,24 +283,21 @@ class Trader:
 
         data = {}
         for product in state.order_depths:
-            product_order_depth: OrderDepth = state.order_depths[product]
+            if product == "STARFRUIT":
+                product_order_depth: OrderDepth = state.order_depths[product]
 
-            best_ask, best_bid = (0, 0)
-            if len(product_order_depth.buy_orders) != 0:
-                best_bid = np.max(
-                    [float(x) for x in list(product_order_depth.buy_orders.keys())]
-                )
+                best_ask, best_bid = (0, 0)
+                if len(product_order_depth.buy_orders) != 0:
+                    best_bid = np.max(
+                        [float(x) for x in list(product_order_depth.buy_orders.keys())]
+                    )
 
-            if len(product_order_depth.sell_orders) != 0:
-                best_ask = np.min(
-                    [float(x) for x in list(product_order_depth.sell_orders.keys())]
-                )
+                if len(product_order_depth.sell_orders) != 0:
+                    best_ask = np.min(
+                        [float(x) for x in list(product_order_depth.sell_orders.keys())]
+                    )
 
-            if product != "ORCHIDS":
                 data[product] = (best_bid + best_ask) / 2
-            elif product == "ORCHIDS":
-                orchid_data = state.observations.conversionObservations["ORCHIDS"]
-                data[product] = ((best_bid + best_ask) / 2, orchid_data)
 
         if state.timestamp == 0:
             trader_data_DICT = {}
@@ -223,7 +305,7 @@ class Trader:
         elif state.timestamp != 0:
             trader_data_DICT = jsonpickle.loads(state.traderData)
             trader_data_DICT[state.timestamp] = data
-            if state.timestamp > (32 * 100):
+            if state.timestamp > (6 * 100):
                 lowest_key = min([int(key) for key in trader_data_DICT.keys()])
                 del trader_data_DICT[str(lowest_key)]
 
@@ -240,49 +322,62 @@ class Trader:
                 )
             if product == "STARFRUIT" and state.timestamp > (6 * 100):
                 mid_prices = [x["STARFRUIT"] for x in list(trader_data_DICT.values())]
-                print(mid_prices)
                 next_price = self.calc_next_star_mid(mid_prices[-6:])
 
                 result[product] = self.compute_orders_regression(
                     product, state.order_depths[product], next_price - 1, next_price + 1
                 )
-            if product == "ORCHIDS" and state.timestamp > (32 * 100):
-                ## ARBITRAGE DIFFERENCE IN BID AND ASKS OF MARKET AND CONVERSIONS
-                ## MARKET ORDER BOOK MORE VOLATILE TO CHANGES IN SUNLIGHT ETC.
-                past_orchid_data = [
-                    x["ORCHIDS"] for x in list(trader_data_DICT.values())
-                ]
+            if product == "ORCHIDS":
+                ## MARKET MAKE IN OWN ISLAND
+                ## NEUTRALIZE POSITION USING CONVERSIONS
 
-                """fast_sma = np.array([x[0] for x in past_orchid_data[-14:]]).mean()
-                slow_sma = np.array([x[0] for x in past_orchid_data[-32:]]).mean()
-                if self.first_cross is False and fast_sma > slow_sma:
-                    self.slow_sma_is_above = False
-                    self.first_cross = True
-                elif self.first_cross is False and slow_sma > fast_sma:
-                    self.slow_sma_is_above = True
-                    self.first_cross = True
-                if fast_sma > slow_sma and self.slow_sma_is_above is True:
-                    print("BUYING")
-                    self.slow_sma_is_above = False
-                    obuy = collections.OrderedDict(
-                        sorted(
-                            state.order_depths[product].buy_orders.items(), reverse=True
-                        )
-                    )
-                    tot_vol, best_buy = self.values_extract(obuy, buy=1)
-                    result[product].append(Order(product, best_buy, 10))
-                elif fast_sma < slow_sma and self.slow_sma_is_above is False:
-                    print("SELLING")
-                    self.slow_sma_is_above = True
-                    osell = collections.OrderedDict(
-                        sorted(state.order_depths[product].sell_orders.items())
-                    )
-                    tot_vol, best_sell = self.values_extract(osell)
-                    result[product].append(Order(product, best_sell, -10))
-                print(result)
-                print(state.order_depths["ORCHIDS"].sell_orders)
+                conversionObs = state.observations.conversionObservations[product]
+                fair_ask = (
+                    conversionObs.askPrice
+                    + conversionObs.importTariff
+                    + conversionObs.transportFees
+                ) + 1
+                fair_bid = (
+                    conversionObs.bidPrice
+                    - conversionObs.transportFees
+                    - conversionObs.exportTariff
+                ) - 1
 
-                if state.own_trades is not None:
-                    print("OWN TRADES: ", state.own_trades)"""
+                result[product].append(Order(product, round(fair_ask), -100))
+                result[product].append(Order(product, round(fair_bid), 100))
+                conversions = -state.position.get(product, 0)
+            if product == "GIFT_BASKET":
+                mids = {}
+                gift_prods = ["GIFT_BASKET", "ROSES", "CHOCOLATE", "STRAWBERRIES"]
+                for prod in gift_prods:
+                    order_depth = state.order_depths[prod]
+                    best_ask, best_ask_amount = list(order_depth.sell_orders.items())[0]
+                    best_bid, best_bid_amount = list(order_depth.buy_orders.items())[0]
+                    mids[prod] = (best_ask + best_bid) / 2
+                component_basket_price = (
+                    mids["CHOCOLATE"] * 4 + mids["STRAWBERRIES"] * 6 + mids["ROSES"]
+                )
+                order_depth = state.order_depths[product]
+
+                ## GIFT BASKETS
+                ## TODO: FIND OPT VALUES FOR BASKETS
+                result["GIFT_BASKET"] = self.compute_gb_orders(
+                    "GIFT_BASKET", state, mids, component_basket_price
+                )
+
+                ## CHOC - 8.927, 9.03
+                result["CHOCOLATE"] = self.compute_gb_comp_orders(
+                    "CHOCOLATE", state, mids, (8.927, 9.03)
+                )
+
+                ## STRAWBS - 17.427, 17.6
+                result["STRAWBERRIES"] = self.compute_gb_comp_orders(
+                    "STRAWBERRIES", state, mids, (17.427, 17.6)
+                )
+
+                ## ROSES - 4.873, 4.91
+                result["ROSES"] = self.compute_gb_comp_orders(
+                    "ROSES", state, mids, (4.873, 4.91)
+                )
 
         return result, conversions, serialized_trader_data_DICT
