@@ -45,6 +45,8 @@ class Trader:
         "STRAWBERRIES": 0,
         "ROSES": 0,
         "GIFT_BASKET": 0,
+        "COCONUT": 0,
+        "COCONUT_COUPON": 0,
     }
     POSITION_LIMITS = {
         "STARFRUIT": 20,
@@ -54,6 +56,8 @@ class Trader:
         "STRAWBERRIES": 350,
         "ROSES": 60,
         "GIFT_BASKET": 60,
+        "COCONUT": 300,
+        "COCONUT_COUPON": 600,
     }
 
     def calc_next_star_mid(self, price_inputs):
@@ -274,7 +278,7 @@ class Trader:
         return orders
 
     def run(self, state: TradingState):
-        products = ["AMETHYSTS", "STARFRUIT", "ORCHIDS", "GIFT_BASKET"]
+        products = ["AMETHYSTS", "STARFRUIT", "ORCHIDS", "GIFT_BASKET", "COCONUT"]
         result = {}
         conversions = 0
 
@@ -313,7 +317,7 @@ class Trader:
 
         for product in products:
             result[product] = []
-            if product == "AMETHYSTS":
+            """if product == "AMETHYSTS":
                 acc_bid = 10000
                 acc_ask = 10000
 
@@ -378,6 +382,24 @@ class Trader:
                 ## ROSES - 4.873, 4.91
                 result["ROSES"] = self.compute_gb_comp_orders(
                     "ROSES", state, mids, (4.873, 4.91)
+                )"""
+            if product == "COCONUT":
+                best_ask, best_ask_amount = list(
+                    state.order_depths["COCONUT_COUPON"].sell_orders.items()
+                )[0]
+                result["COCONUT_COUPON"] = []
+                result["COCONUT_COUPON"].append(
+                    Order("COCONUT_COUPON", best_ask, -best_ask_amount)
                 )
-
+            print(state.position.get("COCONUT", 0))
+            print(state.position.get("COCONUT_COUPON", 0))
+            if state.timestamp > 90 * 100:
+                result["COCONUT"] = []
+                result["COCONUT"].append(
+                    Order(
+                        "COCONUT",
+                        int(state.own_trades["COCONUT_COUPON"][-1].price),
+                        int(state.own_trades["COCONUT_COUPON"][-1].quantity),
+                    )
+                )
         return result, conversions, serialized_trader_data_DICT
