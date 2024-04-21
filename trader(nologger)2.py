@@ -384,22 +384,30 @@ class Trader:
                     "ROSES", state, mids, (4.873, 4.91)
                 )"""
             if product == "COCONUT":
-                best_ask, best_ask_amount = list(
-                    state.order_depths["COCONUT_COUPON"].sell_orders.items()
-                )[0]
-                result["COCONUT_COUPON"] = []
-                result["COCONUT_COUPON"].append(
-                    Order("COCONUT_COUPON", best_ask, -best_ask_amount)
-                )
-            print(state.position.get("COCONUT", 0))
-            print(state.position.get("COCONUT_COUPON", 0))
-            if state.timestamp > 90 * 100:
-                result["COCONUT"] = []
-                result["COCONUT"].append(
-                    Order(
-                        "COCONUT",
-                        int(state.own_trades["COCONUT_COUPON"][-1].price),
-                        int(state.own_trades["COCONUT_COUPON"][-1].quantity),
-                    )
-                )
+                for prod in ["COCONUT", "COCONUT_COUPON"]:
+                    if (
+                        len(
+                            list(
+                                state.order_depths["COCONUT_COUPON"].sell_orders.items()
+                            )
+                        )
+                        > 0
+                    ):
+                        best_ask, best_ask_amount = list(
+                            state.order_depths["COCONUT_COUPON"].sell_orders.items()
+                        )[0]
+                    if len(
+                        list(state.order_depths["COCONUT_COUPON"].buy_orders.items())
+                    ):
+                        best_bid, best_bid_amount = list(
+                            state.order_depths["COCONUT_COUPON"].buy_orders.items()
+                        )[0]
+
+                    spread = best_ask - best_bid
+                    result[prod] = []
+                    if spread >= 2:
+                        result[prod] = self.compute_orders(
+                            prod, state.order_depths[prod], best_bid - 1, best_ask + 1
+                        )
+
         return result, conversions, serialized_trader_data_DICT
