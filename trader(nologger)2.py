@@ -34,7 +34,6 @@ import numpy as np
 from statistics import NormalDist
 import jsonpickle
 import collections
-import math as mt
 
 
 class Trader:
@@ -61,7 +60,6 @@ class Trader:
         "COCONUT": 300,
         "COCONUT_COUPON": 600,
     }
-    starfrut_signal = None
 
     def calc_next_star_mid(self, price_inputs):
         price_weights = [
@@ -256,27 +254,83 @@ class Trader:
 
         return orders
 
-    def compute_gb_comp_orders(self, product, state, mids, bounds):
+    def compute_copy_trader(self, state, product, persona):
         orders = []
-        cpos = state.position.get(product, 0)
-        bid_price, bid_amount = list(state.order_depths[product].buy_orders.items())[0]
-        ask_price, ask_amount = list(state.order_depths[product].sell_orders.items())[0]
-        if mids["GIFT_BASKET"] / mids[product] < bounds[0]:  # 4.873
-            orders.append(
-                Order(
-                    product,
-                    bid_price,
-                    max(-self.POSITION_LIMITS[product] - cpos, -bid_amount),
-                )
-            )
-        elif mids["GIFT_BASKET"] / mids[product] > bounds[1]:  # 4.91
-            orders.append(
-                Order(
-                    product,
-                    ask_price,
-                    min(self.POSITION_LIMITS[product] - cpos, -ask_amount),
-                )
-            )
+        if product in list(state.market_trades.keys()):
+            for trade in state.market_trades[product]:
+                order_depth = state.order_depths[product]
+                if trade.seller == persona:
+                    if len(list(order_depth.buy_orders.items())) > 0:
+                        best_bid, best_bid_amount = list(
+                            order_depth.buy_orders.items()
+                        )[0]
+                    orders.append(
+                        Order(
+                            product,
+                            best_bid,
+                            max(
+                                -self.POSITION_LIMITS[product]
+                                - state.position.get(product, 0),
+                                -best_bid_amount,
+                            ),
+                        )
+                    )
+                elif trade.buyer == persona:
+                    if len(list(order_depth.sell_orders.items())) > 0:
+                        best_ask, best_ask_amount = list(
+                            order_depth.sell_orders.items()
+                        )[0]
+                    orders.append(
+                        Order(
+                            product,
+                            best_ask,
+                            min(
+                                self.POSITION_LIMITS[product]
+                                - state.position.get(product, 0),
+                                -best_ask_amount,
+                            ),
+                        )
+                    )
+                else:
+                    if product in list(state.own_trades.keys()):
+                        if (
+                            state.own_trades[product][-1].timestamp
+                            == (state.timestamp - 100)
+                            and abs(state.position.get(product))
+                            != self.POSITION_LIMITS[product]
+                        ):
+                            if state.own_trades[product][-1].quantity < 0:
+                                if len(list(order_depth.buy_orders.items())) > 0:
+                                    best_bid, best_bid_amount = list(
+                                        order_depth.buy_orders.items()
+                                    )[0]
+                                orders.append(
+                                    Order(
+                                        product,
+                                        best_bid,
+                                        max(
+                                            -self.POSITION_LIMITS[product]
+                                            - state.position.get(product, 0),
+                                            -best_bid_amount,
+                                        ),
+                                    )
+                                )
+                            elif state.own_trades[product][-1].quantity > 0:
+                                if len(list(order_depth.sell_orders.items())) > 0:
+                                    best_ask, best_ask_amount = list(
+                                        order_depth.sell_orders.items()
+                                    )[0]
+                                orders.append(
+                                    Order(
+                                        product,
+                                        best_ask,
+                                        min(
+                                            self.POSITION_LIMITS[product]
+                                            - state.position.get(product, 0),
+                                            -best_ask_amount,
+                                        ),
+                                    )
+                                )
 
         return orders
 
@@ -327,7 +381,7 @@ class Trader:
 
         for product in products:
             result[product] = []
-            """if product == "AMETHYSTS":
+            if product == "AMETHYSTS":
                 acc_bid = 10000
                 acc_ask = 10000
 
@@ -359,7 +413,7 @@ class Trader:
 
                 result[product].append(Order(product, round(fair_ask), -100))
                 result[product].append(Order(product, round(fair_bid), 100))
-                conversions = -state.position.get(product, 0)"""
+                conversions = -state.position.get(product, 0)
             if product == "GIFT_BASKET":
                 mids = {}
                 gift_prods = ["GIFT_BASKET", "ROSES", "CHOCOLATE", "STRAWBERRIES"]
@@ -379,17 +433,12 @@ class Trader:
                     "GIFT_BASKET", state, mids, component_basket_price
                 )
 
-                if "ROSES" in list(state.market_trades.keys()):
-                    for trade in state.market_trades["ROSES"]:
-                        order_depth = state.order_depths["ROSES"]
-                        if trade.seller == "Rhianna":
-                            best_bid, best_bid_amount = list(
-                                order_depth.buy_orders.items()
-                            )[0]
-                            result[product].append(
-                                Order(product, best_bid, -best_bid_amount)
-                            )
-            """if product == "COCONUT":
+                result["ROSES"] = self.compute_copy_trader(state, "ROSES", "Rhianna")
+
+                result["CHOCOLATE"] = self.compute_copy_trader(
+                    state, "CHOCOLATE", "Vladimir"
+                )
+            if product == "COCONUT":
                 mids = {}
                 for prod in ["COCONUT", "COCONUT_COUPON"]:
                     order_depth = state.order_depths[product]
@@ -405,6 +454,6 @@ class Trader:
                     state.order_depths["COCONUT_COUPON"],
                     fair_coup - 1,
                     fair_coup + 1,
-                )"""
+                )
 
         return result, conversions, serialized_trader_data_DICT
